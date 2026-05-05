@@ -1,0 +1,117 @@
+// ==UserScript==
+// @name         Auto-Submit mas bloqueo de captchas
+// @namespace    http://violentmonkey.net/
+// @version      3.4.0
+// @description  Auto-submit con alerta visual para precio bajo - SIN SONIDO
+// @author       TuNombre
+// @match        https://kolotibablo.com/*
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @updateURL    https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/kolotibablo-auto.user.js
+// @downloadURL  https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/kolotibablo-auto.user.js
+// @homepageURL  https://github.com/TU_USUARIO/TU_REPO
+// @supportURL   https://github.com/TU_USUARIO/TU_REPO/issues
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    const respuestasMalas = ['empty', '-4', '-5', 'D', 'v54', '-1', '-2', '348', '4', '7', '929','2','v54', '6'];
+
+    let config = { funcionActiva: true, tiempoEspera: 1 };
+    let timeoutId = null;
+    let textoAnterior = '';
+    let alertaActiva = false;
+    let ultimoPrecioBajo = false;
+
+    function esTextoBloqueado(texto) {
+        if (!texto) return false;
+        return respuestasMalas.some(p => texto.trim().toLowerCase() === p.toLowerCase());
+    }
+
+    function verificarPrecio() {
+        const precioElement = document.querySelector('div.desc.nowrap');
+        if (!precioElement) return;
+
+        const tienePrecioBajo = precioElement.textContent.includes('$0.38 per 1000 tasks');
+
+        if (tienePrecioBajo && !ultimoPrecioBajo) {
+            if (!alertaActiva) {
+                alertaActiva = true;
+                const alerta = document.createElement('div');
+                alerta.id = 'precioAlerta';
+                alerta.innerHTML = '⚠️ PRECIO BAJO $0.38 - TAREA MANUAL ⚠️';
+                alerta.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:linear-gradient(135deg,#ff4444,#ff8c00);color:white;padding:8px 12px;font-size:12px;border-radius:8px;cursor:pointer;font-weight:bold';
+                alerta.onclick = () => { alerta.remove(); alertaActiva = false; };
+                document.body.appendChild(alerta);
+            }
+        } else if (!tienePrecioBajo && ultimoPrecioBajo) {
+            const alerta = document.getElementById('precioAlerta');
+            if (alerta) alerta.remove();
+            alertaActiva = false;
+        }
+
+        ultimoPrecioBajo = tienePrecioBajo;
+    }
+
+    function hacerClickSubmit() {
+        if (window.__CAPTCHA_BLOQUEADO__ === true) return;
+        const btn = document.querySelector('.submit-wrap button.btn.btn-default');
+        if (btn && !btn.disabled) btn.click();
+    }
+
+    function manejarDeteccionTexto() {
+        verificarPrecio();
+        if (!config.funcionActiva) return;
+        if (window.KOLO_SYNC?.correctorOcupado) return;
+
+        const input = document.querySelector('input.inp-dft.w100p');
+        if (!input) return;
+
+        const textoActual = input.value.trim();
+
+        if (esTextoBloqueado(textoActual)) {
+            window.__CAPTCHA_BLOQUEADO__ = true;
+            clearTimeout(timeoutId);
+            textoAnterior = textoActual;
+            return;
+        }
+
+        window.__CAPTCHA_BLOQUEADO__ = false;
+
+        if (textoActual && textoActual !== textoAnterior) {
+            textoAnterior = textoActual;
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                if (!window.KOLO_SYNC?.correctorOcupado) {
+                    hacerClickSubmit();
+                    setTimeout(() => textoAnterior = '', 500);
+                }
+            }, config.tiempoEspera * 1000);
+        }
+    }
+
+    function init() {
+        console.log('✅ Script Auto-Submit iniciado correctamente');
+        
+        const input = document.querySelector('input.inp-dft.w100p');
+        if (input) {
+            input.addEventListener('input', manejarDeteccionTexto);
+            input.addEventListener('change', manejarDeteccionTexto);
+        }
+
+        new MutationObserver(() => {
+            const newInput = document.querySelector('input.inp-dft.w100p');
+            if (newInput && !newInput.__submitHooked) {
+                newInput.__submitHooked = true;
+                newInput.addEventListener('input', manejarDeteccionTexto);
+                newInput.addEventListener('change', manejarDeteccionTexto);
+            }
+        }).observe(document.body, { childList: true, subtree: true });
+
+        setInterval(verificarPrecio, 1000);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+})();
