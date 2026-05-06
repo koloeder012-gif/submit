@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const respuestasMalas = ['empty', '-4', '-5', 'D', 'v54', '-1', '-2', '348', '4', '7', '929','2','v54', '6'];
+    const respuestasMalas = ['empty', '-4', '-5', 'D', 'v54', '-1', '-2', '348', '4', '7', '929','2','v54', '6', '3', '5'];
 
     let config = { funcionActiva: true, tiempoEspera: 1 };
     let timeoutId = null;
