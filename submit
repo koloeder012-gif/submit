@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Auto-Submit mas bloqueo de captchas
 // @namespace    http://violentmonkey.net/
-// @version      3.4.0
-// @description  Auto-submit con alerta visual para precio bajo - SIN SONIDO
+// @version      3.5.0
+// @description  Auto-submit - SIN notificación de precio bajo
 // @author       TuNombre
 // @match        https://kolotibablo.com/*
 // @grant        GM_getValue
@@ -21,37 +21,10 @@
     let config = { funcionActiva: true, tiempoEspera: 1 };
     let timeoutId = null;
     let textoAnterior = '';
-    let alertaActiva = false;
-    let ultimoPrecioBajo = false;
 
     function esTextoBloqueado(texto) {
         if (!texto) return false;
         return respuestasMalas.some(p => texto.trim().toLowerCase() === p.toLowerCase());
-    }
-
-    function verificarPrecio() {
-        const precioElement = document.querySelector('div.desc.nowrap');
-        if (!precioElement) return;
-
-        const tienePrecioBajo = precioElement.textContent.includes('$0.38 per 1000 tasks');
-
-        if (tienePrecioBajo && !ultimoPrecioBajo) {
-            if (!alertaActiva) {
-                alertaActiva = true;
-                const alerta = document.createElement('div');
-                alerta.id = 'precioAlerta';
-                alerta.innerHTML = '⚠️ PRECIO BAJO $0.38 - TAREA MANUAL ⚠️';
-                alerta.style.cssText = 'position:fixed;top:10px;right:10px;z-index:999999;background:linear-gradient(135deg,#ff4444,#ff8c00);color:white;padding:8px 12px;font-size:12px;border-radius:8px;cursor:pointer;font-weight:bold';
-                alerta.onclick = () => { alerta.remove(); alertaActiva = false; };
-                document.body.appendChild(alerta);
-            }
-        } else if (!tienePrecioBajo && ultimoPrecioBajo) {
-            const alerta = document.getElementById('precioAlerta');
-            if (alerta) alerta.remove();
-            alertaActiva = false;
-        }
-
-        ultimoPrecioBajo = tienePrecioBajo;
     }
 
     function hacerClickSubmit() {
@@ -61,7 +34,6 @@
     }
 
     function manejarDeteccionTexto() {
-        verificarPrecio();
         if (!config.funcionActiva) return;
         if (window.KOLO_SYNC?.correctorOcupado) return;
 
@@ -108,8 +80,6 @@
                 newInput.addEventListener('change', manejarDeteccionTexto);
             }
         }).observe(document.body, { childList: true, subtree: true });
-
-        setInterval(verificarPrecio, 1000);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
