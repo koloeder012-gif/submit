@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Auto-Submit mas bloqueo de captchas
 // @namespace    http://violentmonkey.net/
-// @version      3.5.0
-// @description  Auto-submit - SIN notificación de precio bajo
+// @version      3.6.0
+// @description  Auto-submit - Bloquea números, letras y respuestas malas
 // @author       TuNombre
 // @match        https://kolotibablo.com/*
 // @grant        GM_getValue
@@ -16,15 +16,54 @@
 (function () {
     'use strict';
 
-    const respuestasMalas = ['empty', 'u', 'r', 'ey', 'v', 'y', '0', 'b', 'j', 'm', '-4', '-5', 'D', 'W', 'v54', '9', '-1', '-2', '348', '4', '7', '929','2','v54', '6', '3', '5'];
+    // Respuestas malas originales
+    const respuestasMalasOriginales = ['empty', 'u', 'r', 'ey', 'v', 'y', '0', 'b', 'j', 'm', '-4', '-5', 'D', 'W', 'v54', '9', '-1', '-2', '348', '4', '7', '929','2','v54', '6', '3', '5'];
+    
+    // Generar TODOS los números del 0 al 9
+    const numeros = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    
+    // Generar TODAS las letras de la A a la Z (mayúsculas y minúsculas)
+    const letras = [];
+    for (let i = 65; i <= 90; i++) { // A-Z mayúsculas
+        letras.push(String.fromCharCode(i).toLowerCase());
+        letras.push(String.fromCharCode(i).toUpperCase());
+    }
+    
+    // Combinar todo: respuestas malas originales + números + letras
+    const respuestasMalas = [...new Set([...respuestasMalasOriginales, ...numeros, ...letras])];
 
     let config = { funcionActiva: true, tiempoEspera: 1 };
     let timeoutId = null;
     let textoAnterior = '';
 
+    console.log(`📋 Total de respuestas bloqueadas: ${respuestasMalas.length}`);
+    console.log(`   - Originales: ${respuestasMalasOriginales.length}`);
+    console.log(`   - Números (0-9): ${numeros.length}`);
+    console.log(`   - Letras (A-Z a-z): ${letras.length}`);
+
     function esTextoBloqueado(texto) {
         if (!texto) return false;
-        return respuestasMalas.some(p => texto.trim().toLowerCase() === p.toLowerCase());
+        const textoLower = texto.trim().toLowerCase();
+        
+        // Verificar si es número (0-9)
+        if (/^[0-9]$/.test(textoLower)) {
+            console.log(`🔢 Número bloqueado: "${texto}"`);
+            return true;
+        }
+        
+        // Verificar si es letra (a-z)
+        if (/^[a-z]$/i.test(textoLower)) {
+            console.log(`🔤 Letra bloqueada: "${texto}"`);
+            return true;
+        }
+        
+        // Verificar en lista de respuestas malas
+        if (respuestasMalas.some(p => textoLower === p.toLowerCase())) {
+            console.log(`🚫 Respuesta mala bloqueada: "${texto}"`);
+            return true;
+        }
+        
+        return false;
     }
 
     function hacerClickSubmit() {
@@ -65,6 +104,7 @@
 
     function init() {
         console.log('✅ Script Auto-Submit iniciado correctamente');
+        console.log(`🔒 Bloqueando: ${respuestasMalas.length} respuestas (originales + números + letras)`);
         
         const input = document.querySelector('input.inp-dft.w100p');
         if (input) {
