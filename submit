@@ -16,7 +16,7 @@
 (function () {
     'use strict';
 
-    const respuestasMalas = ['empty', 'u', 'ey', 'v', 'y', '0', 'b', 'j', 'm', '-4', '-5', 'D', 'W', 'v54', '9', '-1', '-2', '348', '4', '7', '929','2','v54', '6', '3', '5'];
+    const respuestasMalas = ['empty', 'u', 'r', 'ey', 'v', 'y', '0', 'b', 'j', 'm', '-4', '-5', 'D', 'W', 'v54', '9', '-1', '-2', '348', '4', '7', '929','2','v54', '6', '3', '5'];
 
     let config = { funcionActiva: true, tiempoEspera: 1 };
     let timeoutId = null;
