@@ -17,7 +17,7 @@
     'use strict';
 
     // Respuestas malas originales
-    const respuestasMalasOriginales = ['empty', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '355', 'ey', 'v54', '348', '929'];
+    const respuestasMalasOriginales = ['empty', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '355', 'ey', '1349', 'v54', '348', '929'];
     
     // Generar TODOS los números del 0 al 9
     const numeros = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
